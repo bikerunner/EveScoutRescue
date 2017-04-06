@@ -7,13 +7,17 @@ $db = new Database();
 $db->query("SELECT * FROM cache WHERE ExpiresOn < CURDATE() AND Status <> 'Expired' ORDER BY LastUpdated DESC");
 $rows = $db->resultset();
 
-// for each expired record, update Status in [cache] table
+// for each expired record, perform necessary updates
 $errmsg = '';
 $cacheid = '';
 foreach ($rows as $val) {
+	//update Status in [cache] table
 	$db->query("UPDATE cache SET Status = 'Expired' WHERE CacheID = :cacheID");
 	$db->bind(':cacheID', $val['CacheID']);
 	$db->execute();
+	//remove note in TW
+		//[code coming soon!]
+	//prepare string for feedback
 	$cacheid = $cacheid . $val['CacheID'] . ', ';
 }
 

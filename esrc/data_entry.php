@@ -29,14 +29,14 @@ include_once '../includes/head.php';
 			$('input.system_tender').typeahead({
                 name: 'system_tender',
                 remote: 'activecaches.php?query=%QUERY',
-				minLength: 3, // send AJAX request only after user type in at least 3 characters
-				limit: 8 // limit to show only 8 results
+				minLength: 3,
+				limit: 8
             });
 			$('input.system_adjunct').typeahead({
                 name: 'system_adjunct',
                 remote: 'activecaches.php?query=%QUERY',
-				minLength: 3, // send AJAX request only after user type in at least 3 characters
-				limit: 8 // limit to show only 8 results
+				minLength: 3,
+				limit: 8
             });
         })
     </script>
@@ -155,6 +155,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST")
 						$db->execute();
 						//end db transaction
 						$db->endTransaction();
+						//insert note to TW
+							//[code coming soon!]						
+						//prepare string for feedback to user
 						$successcolor = '#ccffcc';
 					}
 				}
@@ -187,6 +190,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST")
 							$db->execute();
 							//end db transaction
 							$db->endTransaction();
+							//update note in TW
+								//[code coming soon!]
 							break;
 						case 'Upkeep Required':
 							$db->query("UPDATE cache SET ExpiresOn = :expdate, Status = :status, Note = CONCAT(Note, :note) WHERE System = :system AND Status <> 'Expired'");
@@ -197,6 +202,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST")
 							$db->execute();
 							//end db transaction
 							$db->endTransaction();
+							//update note in TW
+								//[code coming soon!]
 							break;
 						case 'Expired':
 							$db->query("UPDATE cache SET Status = :status, Note = CONCAT(Note, :note) WHERE System = :system AND Status <> 'Expired'");
@@ -206,9 +213,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST")
 							$db->execute();
 							//end db transaction
 							$db->endTransaction();
+							//remove note in TW
+								//[code coming soon!]
 							//FYI: daily process to update expired caches in [cache] is running via cron-job.org
 							break;
 					}
+					//prepare string for feedback to user
 					$successcolor = '#d1dffa';
 				}
 				break;
@@ -236,6 +246,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST")
 					$db->execute();
 					//end db transaction
 					$db->endTransaction();
+					//update note in TW
+						//[code coming soon!]
+					//prepare string for feedback to user
 					$successcolor = '#fffacd';
 				}
 				break;
