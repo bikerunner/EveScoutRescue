@@ -170,6 +170,11 @@ else: ?>
 			</tbody>
 		</table>
 	</div> -->
+	
+	<?php 
+		$leaderBoard = new LeaderBoard();
+	?>
+	
 	<!-- LEADER BOARDS -->
 	<div class="col-sm-4 white">
 		<span class="sechead"><span style="font-weight: bold;">LEADER BOARD</span><br /><br />
@@ -259,21 +264,14 @@ else: ?>
 			</thead>
 			<tbody>
 				<?php
-				$db->query("SELECT COUNT(*) AS cnt, Pilot
-					FROM activity
-					GROUP BY Pilot
-					ORDER BY cnt DESC");
-				$rows = $db->resultset();
+
+				$rows = $leaderBoard->getAllHigh(3);
 				
-				$ctr = 0;
 				foreach ($rows as $value) {
-					$ctr++;
 					echo '<tr>';
 					echo '<td class="white">'. $value['Pilot'] .'</td>';
 					echo '<td class="white" align="right">'. $value['cnt'] .'</td>';
 					echo '</tr>';
-					//display only top 3 records
-					if (intval($ctr) == 3) { break; }
 				}
 				?>
 			</tbody>
@@ -292,15 +290,7 @@ else: ?>
 			</thead>
 			<tbody>
 				<?php
-				$start = date('Y-m-d', strtotime('-30 days'));
-				$end = date('Y-m-d', strtotime("tomorrow"));
-				$db->query("SELECT Pilot, max(ActivityDate) as maxdate FROM activity 
-					WHERE ActivityDate BETWEEN :start AND :end
-					GROUP BY Pilot ORDER BY maxdate DESC");
-				$db->bind(':start', $start);
-				$db->bind(':end', $end);
-				$rows = $db->resultset();
-				
+				$rows = $leaderBoard->getTopLastDays(3);
 				foreach ($rows as $value) {
 					//display records for only the last 60 days
 					if (strtotime($value['maxdate']) > strtotime('-60 day')) {
