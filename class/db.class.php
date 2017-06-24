@@ -20,6 +20,9 @@ define("DB_USER", $config['username']);
 define("DB_PASS", $config['password']);
 define("DB_NAME", $config['dbname']);
 
+// check for enabled maintenance mode in DB
+define("MAINTENANCE", $config['maintenance']);
+
 /**
  * Database connection handling wrapper. It's possible to run one query at a time only.
  */
@@ -39,8 +42,16 @@ class Database
 	// flag indication if the statement is already executed
 	private $executed = FALSE;
 	
-	public function __construct() 
+	public function __construct($ignoreMaintenance = FALSE) 
 	{
+		if ($ignoreMaintenance == FALSE && MAINTENANCE === '1')
+		{
+			?>
+			<div class="white"><b>System is in maintenance mode. Retry later!</b></div>
+			<?php
+			exit(1);
+		}
+		
 		// Set DSN
 		$dsn = 'mysql:host=' . $this->host . ';dbname=' . $this->dbname;
 
