@@ -151,3 +151,5 @@ class Users {
 		return $_SESSION['auth_characteralliance'] == 99005130;
 	}
 }
+
+?>

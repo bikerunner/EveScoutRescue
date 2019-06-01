@@ -44,3 +44,5 @@ class Config
 	
 	const DISCORD_SAR_COORD_TOKEN = DISCORDCOORD;
 }
+
+?>

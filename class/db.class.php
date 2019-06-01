@@ -196,3 +196,5 @@ class Database
 		return $this->stmt->debugDumpParams();
 	}
 }
+
+?>
