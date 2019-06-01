@@ -12,11 +12,13 @@ require_once '../class/db.class.php';
 require_once '../class/caches.class.php';
 require_once '../class/rescue.class.php';
 require_once '../class/users.class.php';
+require_once '../class/data.class.php';
 
 $database = new Database();
 $caches = new Caches($database);
 $users = new Users($database);
 $rescues = new Rescue($database);
+$dataClass = new Data($database);
 
 $ctrESRCrescues = $rescues->getRescueCount('closed-esrc');
 $ctrSARrescues = $rescues->getRescueCount('closed-rescued');
@@ -106,7 +108,7 @@ include_once '../includes/top-right.php';
 			of all rescues occur within <?=round(intval($SARWaitMode)+1*24)?> hours
 		</span><br /><br />
 		<span class="sechead white">
-			<span style="font-weight: bold; color: gold;"><?=intval($jcount)?></span> 
+			<span style="font-weight: bold; color: gold;"><?=intval($jcount)?><!-- Debug Visited: <?= $dataClass->getLatestValue('visited', '0') ?> --></span> 
 			J-space Systems</span><br /> 
 		<span class="white">
 			visited by our Rescue pilots in the last <span style="font-weight: bold; color: gold;"><?=intval($daysBack)?></span> days
