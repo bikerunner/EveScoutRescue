@@ -1,36 +1,24 @@
 <?php
-session_start();
-
-// - Set arrays of different page types
-// - If it's not in one of these arrays, it is a public page that does not require login to access
-$pgsAdmin    = array('/esrc/payoutadmin.php');
-$pgsAlliance = array('/esrc/data_entry.php','/esrc/search.php');
-
-//populate array of admin users
-$admins      = array('Thrice Hapus','Mynxee','Johnny Splunk');
+if (session_status() == PHP_SESSION_NONE) {
+	session_start();
+}
+require_once '../class/output.class.php';
+require_once '../class/db.class.php';
+require_once '../class/users.class.php';
+require_once '../class/config.class.php';
 
 //populate display strings for authenticated users
 if (isset($_SESSION['auth_characterid'])) {
 	$charimg    = '<img src="https://image.eveonline.com/Character/'.
 				$_SESSION['auth_characterid'].'_64.jpg">';
 	$charname   = $_SESSION['auth_charactername'];
-	$chardiv    = '<div style="text-align: center;">'.$charimg.'<br />' .
-				  '<div><span class="white">' .$charname. '</span><br />' .
-				  '<span class="descr"><a href="../auth/logout.php">logout</a></span>' .
-				  '</div></div>';
-	//prepare footer with links for EvE-Scout pilots
-	if ($_SESSION['auth_characteralliance'] == 'EvE-Scout Enclave') {
-		$charfooter = '<footer class="footer">
-				       <div class="container">
-        		       <span class="text-muted">EvE-Scout: <a href="../esrc/search.php">ESRC Search</a>&nbsp;&nbsp;&nbsp;';
-		//additional footer links for admin users
-		if (in_array($charname, $admins)) {
-			$charfooter = $charfooter. 'Admin: <a href="../esrc/payoutadmin.php">Payouts</a>';
-		}
-		$charfooter = $charfooter. '</span></div></footer>';
-	}
-	
+	$logoutlink = (isset($_SESSION['auth_copilot'])) ? '' : '<span class="descr"><a href="../auth/logout.php">logout</a></span>';
+	$chardiv    = '<div style="text-align: center;"><a href="../esrc/personal_stats.php?pilot=' . 
+				  urlencode($charname) . '" target="_blank">'.$charimg.'<br />' . 
+				  '<div><span class="white">' . Output::htmlEncodeString($charname) . 
+				  '</span></a><br />' . $logoutlink . '</div></div>';
 }
+
 //populate display string for non-authenticated users
 else {
 	$chardiv  = '<a href="../auth/login.php">'.
@@ -40,26 +28,14 @@ else {
 // Only run through auth routines if we are NOT on localhost
 if (strpos($_SERVER['HTTP_HOST'], 'localhost') === false) {
 	// We are on an admin page...
-	if (in_array($_SERVER['PHP_SELF'], $pgsAdmin)) {
+	if (strpos($_SERVER['PHP_SELF'], '/admin/') !== false) {
 		//1a. ...and user is logged in...
-		if (isset($_SESSION['auth_characterid'])) {
+ 		if (isset($_SESSION['auth_characterid'])) {
+			$database = new Database();
+			$users = new Users($database);
 			//2. ...but user is not an admin, so redirect back to home
-			if (array_search($charname, $admins) === false) {
-				header("Location: /");
-			}
-		}
-		//1b. ...and user is not logged in, so redirect
-		else {
-			login_redirect();
-		}
-	}
-	// We are on an Alliance-only page...
-	elseif (in_array($_SERVER['PHP_SELF'], $pgsAlliance)) {
-		//1a. ...and user is logged in...
-		if (isset($_SESSION['auth_characterid'])) {
-			//2. ...but user is not part of EvE-Scout alliance, so redirect back to home
-			if (!$_SESSION['auth_characteralliance'] == 'EvE-Scout Enclave') {
-				header("Location: /");
+			if ($users->isAdmin($charname) === false) {
+					header("Location: ".Config::ROOT_PATH);
 			}
 		}
 		//1b. ...and user is not logged in, so redirect

@@ -1,5 +1,11 @@
 <?php
-$config = parse_ini_file('../../config/esr_dbconfig.ini');
+if (strpos($_SERVER['HTTP_HOST'],'dev') === FALSE) {
+	$config = parse_ini_file('../../config/esr_dbconfig.ini');
+}
+else {
+	$configpath = preg_replace('/\/htdocs\/.*$/', '', $_SERVER['REDIRECT_DOCUMENT_ROOT']) . '/htdocs/config/esr_dbconfig_dev.ini';
+	$config = parse_ini_file($configpath);
+}
 
 // check if a config is found
 if ($config === FALSE)
@@ -14,6 +20,9 @@ define("DB_HOST", $config['hostname']);
 define("DB_USER", $config['username']);
 define("DB_PASS", $config['password']);
 define("DB_NAME", $config['dbname']);
+
+// check for enabled maintenance mode in DB
+define("MAINTENANCE", $config['maintenance']);
 
 /**
  * Database connection handling wrapper. It's possible to run one query at a time only.
@@ -34,8 +43,31 @@ class Database
 	// flag indication if the statement is already executed
 	private $executed = FALSE;
 	
-	public function __construct() 
+	/**
+	 * Create a new database connection instance.
+	 * 
+	 * Note: The database can set to maintenance mode. This mode is used for migration tasks only.
+	 * Only connections with the 'connectMaintenance' flag set can use this mode.
+	 * 
+	 * @param string $connectMaintenance (default: <code>FALSE</code>) connect only in maintenance mode if <code>TRUE</code>.  
+	 */
+	public function __construct($connectMaintenance = FALSE)
 	{
+		if ($connectMaintenance == FALSE && MAINTENANCE === '1')
+		{
+			?>
+			<div class="white"><b>System is in maintenance mode. Retry later!</b></div>
+			<?php
+			exit(1);
+		}
+		else if ($connectMaintenance == TRUE && MAINTENANCE != '0')
+		{
+			?>
+			<div class="white"><b>Maintenance connection are allowed in 'maintenance' mode only!!!</b></div>
+			<?php
+			exit(1);
+		}
+		
 		// Set DSN
 		$dsn = 'mysql:host=' . $this->host . ';dbname=' . $this->dbname;
 

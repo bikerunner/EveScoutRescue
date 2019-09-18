@@ -1,4 +1,6 @@
 <?php
+// CALLED EACH DAY AT 7:05 ET VIA CRONTAB ON PRODUCTION SERVER
+
 include_once '../class/db.class.php';
 
 $db = new Database();
@@ -6,6 +8,7 @@ $db = new Database();
 // get all expired rows
 $db->query("SELECT * FROM cache WHERE ExpiresOn < CURDATE() AND Status <> 'Expired' ORDER BY LastUpdated DESC");
 $rows = $db->resultset();
+$db->closeQuery();
 
 // for each expired record, update Status in [cache] table
 $errmsg = '';
