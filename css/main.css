@@ -4,6 +4,12 @@ body {
     background-color: black;
 }
 
+body::before {
+    content: ' ';
+    position: fixed;
+    will-change: transform;
+}
+
 .clearit {
 	clear: both;
 }
@@ -51,6 +57,13 @@ div.centered {
 	font-weight: bolder;
 }
 
+.sechead-no-indent {
+	padding-bottom: 3px;
+	padding-top: 3px;
+	font-size: 156%;
+	font-weight: bolder;
+}
+
 .sower {
 	background-color: green;
 	color: white;
@@ -87,6 +100,18 @@ div.centered {
 	border-radius: 0px 0px 6px 6px;
 }
 
+.sar {
+	background-color: #c9302c;
+	border-radius: 6px 6px 0px 0px;
+	color: white;
+}
+
+.sysnotes {
+	background-color: #504d4d;
+	border-radius: 6px 6px 0px 0px;
+	color: white;
+}
+
 .field {
 	padding-bottom: 10px;
 }
@@ -106,6 +131,7 @@ div.centered {
 
 .tt-hint,
 .targetsystem,
+.sys,
 .system,
 .system_sower,
 .system_tender,
@@ -147,4 +173,92 @@ div.centered {
 
 .tt-suggestion p {
     margin: 0;
+}
+
+.nav-tabs > li > a {
+ 	border-radius: 4px 4px 0 0 ;
+  	background-color: rgba(255, 255, 255, 0.4);
+  	color: black;
+}
+
+.actionSower {
+	background-color:#ccffcc;color:black;
+} 
+.actionTender {
+	background-color:#d1dffa;color:black;
+}
+.actionAgent {
+	background-color:#fffacd;color:black;
+}
+.actionSower {
+	background-color:#ccffcc;color:black;
+} 
+.actionTender {
+	background-color:#d1dffa;color:black;
+}
+.actionAgent {
+	background-color:#fffacd;color:black;
+}
+.cacheHealthy {
+	border-left: 6px solid green;
+}
+.cacheExpired {
+	border-left: 6px solid red;
+}
+.cacheUpkeepRequired {
+	border-left: 6px solid yellow;
+}
+.cacheNoStatus {
+	border-left: 6px solid grey;
+}
+.notesRow {
+	background-color: rgba(42, 42, 0, 0.25);
+	padding-left: 14px;
+}
+.systemName {
+	font-weight: bold; font-size: 200%; vertical-align: middle;
+}
+
+.whStatics {
+	font-family: monospace;
+	padding-top: 5px;
+	font-weight: bold;
+}
+
+.whStatics ul {
+	padding-left: 5px;
+	margin-bottom: 5px;
+	list-style: none;
+	color: brown;
+}
+
+.whDest-ns {
+	color: #7FFFD4;
+}
+.whDest-ls {
+	color: #B8860B;
+}
+.whDest-hs {
+	color: #5cb85c;
+}
+.whDest-thera {
+	color: #6495ED;
+}
+.whDest-c1 {
+	color: #E9967A;
+}
+.whDest-c2 {
+	color: #FA8072;
+}
+.whDest-c3 {
+	color: #FF6347;
+}
+.whDest-c4 {
+	color: #FF4500;
+}
+.whDest-c5 {
+	color: #FF0000;
+}
+.whDest-c6 {
+	color: #DC143C;
 }

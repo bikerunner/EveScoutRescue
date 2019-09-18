@@ -85,7 +85,7 @@ class Systems {
 		}
 		
 		// check the DB for the system name
-		$sql = "select count(1) as cnt from wh_systems where system = :system";
+		$sql = "SELECT count(1) as cnt from wh_systems where system = :system";
 		// create query
 		$this->db->query ( $sql );
 		// and bind parameters
@@ -101,8 +101,7 @@ class Systems {
 	/**
 	 * Check the system to be locked
 	 *
-	 * @param $system the
-	 *        	system name to check
+	 * @param $system the system name to check
 	 * @return the date till the system is locked
 	 */
 	public function locked($system) {
@@ -113,7 +112,8 @@ class Systems {
 		}
 		
 		// check the DB for the system name
-		$sql = "select DoNotSowUntil as locked from wh_systems where system = :system and DoNotSowUntil is not null and DoNotSowUntil >= CURRENT_DATE()";
+		$sql = "SELECT DoNotSowUntil as locked from wh_systems 
+			where system = :system and DoNotSowUntil is not null and DoNotSowUntil >= CURRENT_DATE()";
 		// create query
 		$this->db->query ( $sql );
 		// and bind parameters
@@ -133,7 +133,7 @@ class Systems {
 	public function getLockedCount()
 	{
 		// check the DB for the system name
-		$sql = "select count(1) as locked from wh_systems where DoNotSowUntil is not null and DoNotSowUntil > CURRENT_DATE()";
+		$sql = "SELECT count(1) as locked from wh_systems where DoNotSowUntil is not null and DoNotSowUntil > CURRENT_DATE()";
 		// create query
 		$this->db->query ( $sql );
 		// execute the query
@@ -143,6 +143,183 @@ class Systems {
 		
 		return $result['locked'];
 	}
-}
+	
+	/**
+	 * Returns the class and notes for a given wormhole system.
+	 * @param $system the system name to check
+	 * @return mixed
+	 */
+	public function getWHInfo($system)
+	{
+		// check if system name is set
+		if (! isset ( $system )) {
+			// no, return error code
+			return;
+		}
+		
+		// check the DB for the wormhole name
+		$sql = "SELECT sys.*, GROUP_CONCAT(
+						CONCAT(typ.Name, '/', typ.Destination, '/', typ.Size)
+						ORDER BY typ.Destination
+					) AS StaticWhInfo
+				FROM wh_systems sys, wh_types typ, wh_systemstatics sta
+				WHERE sys.System = :system
+				AND sys.System = sta.System
+				AND sta.StaticType = typ.Name";
 
+		// create query
+		$this->db->query ( $sql );
+		// and bind parameters
+		$this->db->bind ( ":system", $system );
+		// execute the query
+		$result = $this->db->single();
+		// close the query
+		$this->db->closeQuery ();
+		
+		return $result;
+	}
+
+	/**
+	 * Get all activities of a system
+	 * @param unknown $system
+	 * @return string
+	 */
+	public function getSystemActivities($system)
+	{
+		$this->db->query("SELECT * FROM activity WHERE System = :system ORDER By ActivityDate DESC");
+		$this->db->bind(':system', $system);
+		$result = $this->db->resultset();
+		$this->db->closeQuery();
+		
+		return $result;
+	}
+
+	/**
+	 * Add system note
+	 * @param unknown $system
+	 * @param unknown $charname
+	 * @param unknown $note
+	 */
+	public function addSystemNote($system, $charname, $note)
+	{
+		$this->db->beginTransaction();
+		$this->db->query("INSERT INTO systemnote (systemname, noteby, note, notedate) 
+			VALUES (:systemname, :username, :note, :notedate)");
+		$this->db->bind(':systemname', $system);
+		$this->db->bind(':username', $charname);
+		$this->db->bind(':note', $note);
+		$this->db->bind(':notedate', gmdate("Y-m-d H:i:s", time()));
+		$this->db->execute();
+		//end db transaction
+		$this->db->endTransaction();
+	}
+
+	/**
+	 * Update existing system note
+	 * @param unknown $id
+	 * @param unknown $note
+	 * @param unknown $editdate
+	 */
+	public function editSystemNote($id, $note, $editdate)
+	{
+		$this->db->beginTransaction();
+		$this->db->query("UPDATE systemnote SET note = :note, LastUpdated = :nowdt WHERE id = :id");
+		$this->db->bind(':note', $note);
+		$this->db->bind(':nowdt', $editdate);
+		$this->db->bind(':id', $id);
+		$this->db->execute();
+		//end db transaction
+		$this->db->endTransaction();
+	}
+
+	/**
+	 * Get all system notes for a given system
+	 * @param unknown $system
+	 * @return string
+	 */
+	public function getSystemNotes($system)
+	{
+		$this->db->query("SELECT * FROM systemnote WHERE systemname = :system ORDER By notedate DESC");
+		$this->db->bind(':system', $system);
+		$result = $this->db->resultset();
+		$this->db->closeQuery();
+		
+		return $result;
+	}
+
+	/**
+	 * Get a single system note, by ID
+	 * @param unknown $id
+	 * @return string
+	 */
+	public function getSystemNote($id)
+	{
+		$this->db->query("SELECT * FROM systemnote WHERE id = :id");
+		$this->db->bind(':id', $id);
+		$result = $this->db->single();
+		$this->db->closeQuery();
+		
+		return $result;
+	}
+
+	/**
+	 * Delete system note
+	 * @param unknown $id
+	 */
+	public function deleteSystemNote($id)
+	{
+		$this->db->beginTransaction();
+		$this->db->query("DELETE FROM systemnote WHERE id = :id");
+		$this->db->bind(':id', $id);
+		$this->db->execute();
+		//end db transaction
+		$this->db->endTransaction();
+	}
+
+	/**
+	 * Get valid sow locations for system
+	 * @param int $planetCount
+	 * @return string array
+	 */
+	public function getSowLocations($planetCount)
+	{
+		$sowLocs = array('See Notes','Star',
+			'I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII','XIII','XIV','XV','XVI','XVII','XVIII','XIX','XX');
+
+		$nonPlanetOptions = 2;
+		$sowLocs = array_slice($sowLocs, 0, $nonPlanetOptions + $planetCount);
+
+		return $sowLocs;
+	}
+
+	/**
+	 * Returns ship size limit by wormhole size
+	 * @param int $size the max size if the ship
+	 * @return string 'F/D', 'BC', 'BS', 'CAP' or 'SCAP' allowed ship class
+	 */
+	static function getShipSizeLimit($size) {
+	
+		$size = intval($size);
+	
+		if ($size <= 5000000) {
+			$massDesc = "F/D";
+		}
+		else if ($size <= 20000000) {
+			$massDesc = "BC";
+		}
+		else if ($size <= 300000000) {
+			$massDesc = "BS";
+		}
+		else if ($size <= 1350000000) {
+			$massDesc = "CAP";
+		}
+		else  {
+			$massDesc = "SCAP";
+		}
+	
+		return '(' . $massDesc . ')';
+
+	}
+	
+}
 ?>

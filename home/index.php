@@ -4,8 +4,30 @@
 // and stop processing if called direct for security reasons.
 define('ESRC', TRUE);
 
+$root = $_SERVER['DOCUMENT_ROOT'] . '/copilot/';
+require_once $root . 'auth/jcount.php';
 include_once '../includes/auth-inc.php'; 
+include_once '../class/mmmr.class.php';
+require_once '../class/db.class.php';
+require_once '../class/caches.class.php';
+require_once '../class/rescue.class.php';
+require_once '../class/users.class.php';
 
+$database = new Database();
+$caches = new Caches($database);
+$users = new Users($database);
+$rescues = new Rescue($database);
+
+$ctrESRCrescues = $rescues->getRescueCount('closed-esrc');
+$ctrSARrescues = $rescues->getRescueCount('closed-rescued');
+$ctrAllRescues = intval($ctrESRCrescues) + intval($ctrSARrescues);
+$ctractive = $caches->getActiveCount();
+$arrSARWaits = $rescues->getSARWaitTime();
+$SARWaitMean = mmmr($arrSARWaits);
+$SARWaitMode = mmmr($arrSARWaits, 'mode');
+$SARWaitModeCnt = mmmr($arrSARWaits, 'modecnt');
+$daysBack = "7";
+$ctrSystems = $caches->getSystemsVisited($daysBack);
 ?>
 <html>
 
@@ -41,11 +63,10 @@ include_once '../includes/auth-inc.php';
     <style>
     <!--
     	.carousel-content {
-		    color:white;
-		    display:flex;
+		    color: white;
+		    display: flex;
 		    text-align: left;
-		    padding-left: 20px;
-		    padding-right: 20px;
+		    padding: 20px;
 		}
     -->
     </style>
@@ -53,31 +74,20 @@ include_once '../includes/auth-inc.php';
 
 <body>
 <div class="container">
-<div class="row" id="header" style="padding-top: 10px;">
-	<?php include_once '../includes/top-left.php'; ?>
-	<div class="col-sm-8 white" style="text-align: center; height: 100px; vertical-align: middle;">
-		<br /><span class="sechead">New Eden's Premier Wormhole Rescue Service</span><br /><br />
-		Please join the in-game channel <span style="color: gold; font-weight: bold;">EvE-Scout</span> for further assistance.
-	</div>
-	<?php include_once '../includes/top-right.php'; ?>
-</div>
+<div class="ws"></div>
+<div class="row" id="header">
 <?php
-require_once '../class/db.class.php';
-require_once '../class/caches.class.php';
-
-$database = new Database();
-$caches = new Caches($database);
-
-$ctrrescues = $caches->getRescueTotalCount();
-
-$ctractive = $caches->getActiveCount();
+include_once '../includes/top-left.php';
+include_once '../includes/top-center.php';
+include_once '../includes/top-right.php';
 ?>
+</div>
 <div class="ws"></div>
 <div class="row">
 	<div class="col-sm-4" style="text-align: center;">
 		<span class="sechead white">
 			Confirmed Rescues: 
-			<span style="font-weight: bold; color: gold;"><?php echo $ctrrescues; ?></span>
+			<span style="font-weight: bold; color: gold;"><?php echo $ctrAllRescues; ?></span>
 		</span><br />
 		<span class="white">since YC119-Mar-18</span><br /><br />
 		<span class="sechead white">Total Active Caches: 
@@ -86,7 +96,21 @@ $ctractive = $caches->getActiveCount();
 		<span class="white">
 			<span style="font-weight: bold; color: gold;"><?php echo round((intval($ctractive)/2603)*100,1); ?>% </span>
 			of all wormhole systems
-		</span>
+		</span><br /><br />
+		<span class="sechead white">Average Wait Time: 
+			<span style="font-weight: bold; color: gold;"><?=round(intval($SARWaitMean))?> days</span>
+		</span><br /> 
+		<span class="white">
+		<span style="font-weight: bold; color: gold;">
+		    <?=round(intval($SARWaitModeCnt) / max(intval($ctrSARrescues), 1) * 100)?>%</span>
+			of all rescues occur within <?=round(intval($SARWaitMode)+1*24)?> hours
+		</span><br /><br />
+		<span class="sechead white">
+			<span style="font-weight: bold; color: gold;"><?=intval($jcount)?></span> 
+			J-space Systems</span><br /> 
+		<span class="white">
+			visited by our Rescue pilots in the last <span style="font-weight: bold; color: gold;"><?=intval($daysBack)?></span> days
+		</span><br /><br />
 	</div>
 	<div class="col-sm-8" style="text-align: center;">
 		<!-- TESTIMONIAL CAROUSEL -->
@@ -109,65 +133,52 @@ $ctractive = $caches->getActiveCount();
 		  	</a>
 		</div>
 		<!-- END TESTIMONIAL CAROUSEL -->
+		<a class="btn btn-primary btn-md" href="testimonial_submit.php" role="button">Submit Your 
+			Testimonial</a>&nbsp;&nbsp;&nbsp;&nbsp;
+		<a class="btn btn-primary btn-md" href="testimonials_list.php" role="button">Read All 
+			Testimonials</a>
 	</div>
 </div>
 <div class="ws"></div>
 <div class="row">
-	<div class="col-sm-4">
+	<div class="col-sm-6">
 		<div class="panel panel-default">
 			<div class="panel-heading clearfix">
-				<h2 class="pull-left">Cache&nbsp;&nbsp;&nbsp;&nbsp;<img src="../img/cache.png" height="40px" /></h2>
-				<div class="btn-group pull-right" style="padding-top: 12px;">
-			        <a class="btn btn-primary btn-lg" href="../esrc/" role="button">Learn more</a>
+				<h2 class="pull-left">Rescue Cache&nbsp;&nbsp;&nbsp;&nbsp;<img src="../img/cache.png" height="40px" /></h2>
+				<div class="sechead pull-right" style="padding-top: 12px;">
+			        <span style="font-weight: bold; color: #2c608f;"><?=$ctrESRCrescues?></span> rescues
 			    </div>
 			</div>
 			<div class="panel-body">
-				<p class="lead">Anchored throughout Anoikis, our rescue caches contain a probe launcher, core scanner probes, and even a hug or two. Perfect if you have a fitting service or just need probes.</p>
+				<p class="lead">Anchored throughout Anoikis, our rescue caches contain a probe 
+					launcher, core scanner probes, and even a hug or two. Perfect if you have a 
+					fitting service or just need probes. <a href="esrc.php">Learn more...</a></p>
+				<p class="text-center">
+					<a class="btn btn-primary btn-md" href="heroes.php" role="button">Rescue Cache 
+						Hall of Fame</a></p>
 			</div>
 		</div>
 	</div>
-	<div class="col-sm-4">
+	<div class="col-sm-6">
 		<div class="panel panel-default">
 			<div class="panel-heading clearfix">
-				<h2 class="pull-left">Frigate&nbsp;&nbsp;<img src="../img/frig.png" height="40px" /></h2>
-				<div class="btn-group pull-right" style="padding-top: 12px;">
-			        <a class="btn btn-primary btn-lg" href="../rf/" role="button">Learn more</a>
+				<h2 class="pull-left">Search &amp; Rescue &nbsp;&nbsp;&nbsp;<img src="../img/search.png" height="40px" /></h2>
+				<div class="sechead pull-right" style="padding-top: 7.5px;">
+			        <span style="font-weight: bold; color: #2c608f;"><?=$ctrSARrescues?></span> rescues
 			    </div>
 			</div>
 			<div class="panel-body">
-				<p class="lead">Don't have any way to fit a probe launcher? Then our rescue frigates may be just what you're looking for. They have been custom fit so that you can pilot one with even minimal skills.</p>
-			</div>
-		</div>
-	</div>
-	<div class="col-sm-4">
-		<div class="panel panel-default">
-			<div class="panel-heading clearfix">
-				<h2 class="pull-left">Search&nbsp;&nbsp;&nbsp;<img src="../img/search.png" height="40px" /></h2>
-				<div class="btn-group pull-right" style="padding-top: 7.5px;">
-			        <a class="btn btn-primary btn-lg" href="../sar/" role="button">Learn more</a>
-			    </div>
-			</div>
-			<div class="panel-body">
-				<p class="lead">If we don't have a rescue cache or frigate in your current wormhole system, don't despair! Our Search and Rescue pilots will work hard to find you and scout you back to known space.</p>
+				<p class="lead">If we don't have a rescue cache in your current wormhole system, 
+					don't despair! Our Search and Rescue pilots will work hard to find you and 
+					scout you back to known space. <a href="sar.php">Learn more...</a></p>
+				<p class="text-center">
+					<a class="btn btn-primary btn-md" href="heroes_sar.php" role="button">Search and 
+						Rescue Hall of Fame</a></p>
 			</div>
 		</div>
 	</div>
 </div>
 <div class="ws"></div>
-<div class="row">
-	<div class="col-sm-12">
-		<div class="panel panel-default">
-			<div class="panel-body">
-				<p><a href="http://www.eve-scout.com/signal-cartel/">Signal Cartel</a>, the core corporation of the <a href="https://gate.eveonline.com/Alliance/EvE-Scout%20Enclave">EvE-Scout Enclave</a> alliance, is a neutral, non-profit entity that aims to provide a valuable public service to all of New Eden. As such, one of our primary initiatives is to look for and rescue capsuleers who are stranded inside wormholes without equipment to get out by themselves. In accordance to our Credo, our services are free and available to capsuleers of all play styles and allegiance.</p>
-				<p>If you also think that no one should be stranded inside a wormhole due to server problems or socket disconnects, please support this initiative by not blowing up our rescue caches and rescue frigates! We sincerely thank you for your cooperation! </p>
-			</div>
-		</div>
-	</div>
 </div>
-
-</div>
-
-<?php echo isset($charfooter) ? $charfooter : '' ?>
-
 </body>
 </html>
